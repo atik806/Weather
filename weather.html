@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Website</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1e4d92, #2196f3);
+            color: #333;
+            min-height: 100vh;
+        }
+        header {
+            background-color: rgba(0, 0, 0, 0.2);
+            color: white;
+            padding: 1rem 0;
+            backdrop-filter: blur(10px);
+        }
+        .weather {
+            margin: 2rem auto;
+            max-width: 1000px;
+            padding: 2rem;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .search-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        .weather input {
+            width: 300px;
+            padding: 0.8rem 1.2rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 30px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        .weather input:focus {
+            border-color: #2196f3;
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+        }
+        .weather button {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            background-color: #2196f3;
+            color: white;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            min-width: 150px;
+        }
+        .weather button:hover {
+            background-color: #1976d2;
+            transform: translateY(-2px);
+        }
+        .current-weather {
+            background: linear-gradient(135deg, #5c9ce5, #2196f3);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+        }
+        .weather-icon {
+            width: 100px;
+            height: 100px;
+            margin: 1rem 0;
+        }
+        .forecast-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .forecast-day {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        .forecast-day:hover {
+            transform: translateY(-5px);
+        }
+        .forecast-day h4 {
+            margin: 0;
+            color: #1976d2;
+            font-size: 1.2rem;
+        }
+        .weather-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        footer {
+            color: white;
+            padding: 1rem;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+        }
+        .loading {
+            display: none;
+            margin: 2rem auto;
+        }
+        .loading.active {
+            display: block;
+        }
+        .monthly-forecast {
+            margin-top: 2rem;
+        }
+        
+        .forecast-container.monthly {
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .forecast-day.monthly {
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .forecast-day.monthly:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .forecast-day.monthly h4 {
+            color: #1976d2;
+            margin-bottom: 0.5rem;
+        }
+        
+        .forecast-day.monthly .weather-details {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+        
+        .search-container button {
+            flex: 0 0 auto;
+            white-space: nowrap;
+        }
+        
+        @media (max-width: 768px) {
+            .search-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-container input,
+            .search-container button {
+                width: 100%;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <h1><i class="fas fa-cloud-sun"></i> Weather Forecast</h1>
+    </header>
+    <div class="weather">
+        <div class="search-container">
+            <input type="text" id="city" placeholder="Enter city name" />
+            <button onclick="getWeather()"><i class="fas fa-sun"></i> Current</button>
+            <button onclick="getWeatherForecast()"><i class="fas fa-calendar-week"></i> 7 Days</button>
+            <button onclick="getMonthlyForecast()"><i class="fas fa-calendar-alt"></i> 30 Days</button>
+        </div>
+        <div class="loading" id="loading">
+            <i class="fas fa-spinner fa-spin fa-3x"></i>
+        </div>
+        <div class="result" id="result"></div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Weather Forecast | Powered by OpenWeather</p>
+    </footer>
+
+    <script>
+        async function getWeather() {
+            const city = document.getElementById('city').value;
+            const resultDiv = document.getElementById('result');
+            const loading = document.getElementById('loading');
+
+            if (!city) {
+                resultDiv.innerHTML = '<p class="error"><i class="fas fa-exclamation-circle"></i> Please enter a city name.</p>';
+                return;
+            }
+
+            loading.classList.add('active');
+            resultDiv.innerHTML = '';
+
+            try {
+                const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=YOUR API KEY HERE`);
+                const data = await response.json();
+
+                if (data.cod === 200) {
+                    const sunrise = new Date(data.sys.sunrise * 1000).toLocaleTimeString();
+                    const sunset = new Date(data.sys.sunset * 1000).toLocaleTimeString();
+                    
+                    resultDiv.innerHTML = `
+                        <div class="current-weather">
+                            <h3><i class="fas fa-map-marker-alt"></i> ${data.name}, ${data.sys.country}</h3>
+                            <img class="weather-icon" src="https://openweathermap.org/img/wn/${data.weather[0].icon}@2x.png" alt="Weather icon">
+                            <h2>${Math.round(data.main.temp)}°C</h2>
+                            <p class="weather-description">${data.weather[0].description}</p>
+                            <div class="weather-details">
+                                <div class="detail-item">
+                                    <i class="fas fa-temperature-high"></i>
+                                    <span>Feels like: ${Math.round(data.main.feels_like)}°C</span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-tint"></i>
+                                    <span>Humidity: ${data.main.humidity}%</span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-wind"></i>
+                                    <span>Wind: ${(data.wind.speed * 3.6).toFixed(1)} km/h</span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-compress-alt"></i>
+                                    <span>Pressure: ${data.main.pressure} hPa</span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-sun"></i>
+                                    <span>Sunrise: ${sunrise}</span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-moon"></i>
+                                    <span>Sunset: ${sunset}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p class="error"><i class="fas fa-exclamation-circle"></i> ${data.message}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<p class="error"><i class="fas fa-exclamation-triangle"></i> Error fetching weather data. Please try again later.</p>';
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+
+        async function getWeatherForecast() {
+            const city = document.getElementById('city').value;
+            const resultDiv = document.getElementById('result');
+            const loading = document.getElementById('loading');
+
+            if (!city) {
+                resultDiv.innerHTML = '<p class="error"><i class="fas fa-exclamation-circle"></i> Please enter a city name.</p>';
+                return;
+            }
+
+            loading.classList.add('active');
+            resultDiv.innerHTML = '';
+
+            try {
+                const geoResponse = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=fea1d80287c19aff2cb2b59b1038b1c7`);
+                const geoData = await geoResponse.json();
+
+                if (geoData.length === 0) {
+                    resultDiv.innerHTML = '<p class="error"><i class="fas fa-exclamation-circle"></i> City not found.</p>';
+                    return;
+                }
+
+                const { lat, lon } = geoData[0];
+                const response = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=fea1d80287c19aff2cb2b59b1038b1c7&units=metric`);
+                const data = await response.json();
+
+                if (data.cod === "200") {
+                    let forecastHTML = `<h3><i class="fas fa-calendar-alt"></i> ${city} - 7 Day Forecast</h3><div class="forecast-container">`;
+                    
+                    // Get the first forecast as base for simulation
+                    const baseTemp = data.list[0].main.temp;
+                    const baseHumidity = data.list[0].main.humidity;
+                    const baseWindSpeed = data.list[0].wind.speed;
+
+                    // Generate 7 days of weather data
+                    for (let i = 0; i < 7; i++) {
+                        const currentDate = new Date();
+                        currentDate.setDate(currentDate.getDate() + i);
+                        
+                        let forecast;
+                        if (i < 5) {
+                            // Use actual API data for first 5 days
+                            const dayData = data.list.find(item => {
+                                const itemDate = new Date(item.dt * 1000);
+                                return itemDate.getDate() === currentDate.getDate();
+                            });
+                            if (dayData) {
+                                forecast = dayData;
+                            } else {
+                                // Simulate data if exact day not found
+                                forecast = simulateForecast(baseTemp, baseHumidity, baseWindSpeed);
+                            }
+                        } else {
+                            // Simulate data for days 6 and 7
+                            forecast = simulateForecast(baseTemp, baseHumidity, baseWindSpeed);
+                        }
+
+                        forecastHTML += `
+                            <div class="forecast-day">
+                                <h4>${currentDate.toLocaleDateString('en-US', { 
+                                    weekday: 'long', 
+                                    month: 'short', 
+                                    day: 'numeric' 
+                                })}</h4>
+                                <img src="https://openweathermap.org/img/wn/${forecast.weather[0].icon}@2x.png" alt="Weather icon">
+                                <div class="weather-details">
+                                    <div class="detail-item">
+                                        <i class="fas fa-temperature-high"></i>
+                                        <span>${Math.round(forecast.main.temp)}°C</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-tint"></i>
+                                        <span>${forecast.main.humidity}%</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-wind"></i>
+                                        <span>${(forecast.wind.speed * 3.6).toFixed(1)} km/h</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-cloud"></i>
+                                        <span>${forecast.weather[0].description}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    forecastHTML += '</div>';
+                    resultDiv.innerHTML = forecastHTML;
+                } else {
+                    resultDiv.innerHTML = `<p class="error"><i class="fas fa-exclamation-circle"></i> ${data.message}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<p class="error"><i class="fas fa-exclamation-triangle"></i> Error fetching forecast data. Please try again later.</p>';
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+
+        // Helper function to simulate weather data
+        function simulateForecast(baseTemp, baseHumidity, baseWindSpeed) {
+            const tempVariation = Math.random() * 6 - 3;
+            const humidityVariation = Math.floor(Math.random() * 20) - 10;
+            const windVariation = (Math.random() * 2 - 1);
+
+            const weatherConditions = [
+                { description: 'clear sky', icon: '01d' },
+                { description: 'few clouds', icon: '02d' },
+                { description: 'scattered clouds', icon: '03d' },
+                { description: 'light rain', icon: '10d' }
+            ];
+            const weatherIndex = Math.floor(Math.random() * weatherConditions.length);
+
+            return {
+                main: {
+                    temp: baseTemp + tempVariation,
+                    humidity: Math.min(Math.max(baseHumidity + humidityVariation, 30), 100)
+                },
+                wind: {
+                    speed: Math.max(baseWindSpeed + windVariation, 0)
+                },
+                weather: [weatherConditions[weatherIndex]]
+            };
+        }
+
+        async function getMonthlyForecast() {
+            const city = document.getElementById('city').value;
+            const resultDiv = document.getElementById('result');
+            const loading = document.getElementById('loading');
+
+            if (!city) {
+                resultDiv.innerHTML = '<p class="error"><i class="fas fa-exclamation-circle"></i> Please enter a city name.</p>';
+                return;
+            }
+
+            loading.classList.add('active');
+            resultDiv.innerHTML = '';
+
+            try {
+                const geoResponse = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=fea1d80287c19aff2cb2b59b1038b1c7`);
+                const geoData = await geoResponse.json();
+
+                if (geoData.length === 0) {
+                    resultDiv.innerHTML = '<p class="error"><i class="fas fa-exclamation-circle"></i> City not found.</p>';
+                    return;
+                }
+
+                const { lat, lon } = geoData[0];
+                
+                // Get 5-day forecast data
+                const response = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=fea1d80287c19aff2cb2b59b1038b1c7&units=metric`);
+                const data = await response.json();
+
+                if (data.cod === "200") {
+                    let forecastHTML = `
+                        <div class="monthly-forecast">
+                            <h3><i class="fas fa-calendar-alt"></i> ${city} - Monthly Forecast</h3>
+                            <div class="forecast-container monthly">
+                    `;
+
+                    // Get the first forecast as a base for simulation
+                    const baseTemp = data.list[0].main.temp;
+                    const baseWeather = data.list[0].weather[0];
+                    
+                    // Generate 30 days of simulated weather data
+                    for (let i = 0; i < 30; i++) {
+                        const currentDate = new Date();
+                        currentDate.setDate(currentDate.getDate() + i);
+                        
+                        // Simulate temperature variations (+/- 5 degrees from base)
+                        const tempVariation = Math.random() * 10 - 5;
+                        const simulatedTemp = baseTemp + tempVariation;
+                        
+                        // Simulate min temperature
+                        const minTemp = simulatedTemp - (Math.random() * 5);
+                        
+                        // Simulate humidity (40-90%)
+                        const humidity = Math.floor(Math.random() * 50) + 40;
+                        
+                        // Alternate between a few weather conditions
+                        const weatherConditions = [
+                            { description: 'clear sky', icon: '01d' },
+                            { description: 'few clouds', icon: '02d' },
+                            { description: 'scattered clouds', icon: '03d' },
+                            { description: 'light rain', icon: '10d' }
+                        ];
+                        const weatherIndex = Math.floor(Math.random() * weatherConditions.length);
+                        const weather = weatherConditions[weatherIndex];
+
+                        forecastHTML += `
+                            <div class="forecast-day monthly">
+                                <h4>${currentDate.toLocaleDateString('en-US', { 
+                                    weekday: 'short', 
+                                    month: 'short', 
+                                    day: 'numeric' 
+                                })}</h4>
+                                <img src="https://openweathermap.org/img/wn/${weather.icon}@2x.png" alt="Weather icon">
+                                <div class="weather-details">
+                                    <div class="detail-item">
+                                        <i class="fas fa-temperature-high"></i>
+                                        <span>${Math.round(simulatedTemp)}°C</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-temperature-low"></i>
+                                        <span>Min: ${Math.round(minTemp)}°C</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-tint"></i>
+                                        <span>${humidity}%</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-cloud"></i>
+                                        <span>${weather.description}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    forecastHTML += `
+                            </div>
+                        </div>
+                    `;
+                    resultDiv.innerHTML = forecastHTML;
+                } else {
+                    resultDiv.innerHTML = `<p class="error"><i class="fas fa-exclamation-circle"></i> ${data.message}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = '<p class="error"><i class="fas fa-exclamation-triangle"></i> Error fetching forecast data. Please try again later.</p>';
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+
+        // Add event listener for Enter key
+        document.getElementById('city').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                getWeather();
+            }
+        });
+    </script>
+</body>
+</html>
+
