@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather Website</title>
-    <style>
+    <style
         body {
             font-family: 'Roboto', sans-serif;
             margin: 0;
@@ -208,7 +208,7 @@
             resultDiv.innerHTML = '';
 
             try {
-                const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=YOUR API KEY HERE`);
+                const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=AIzaSyDsSPHKroaxNiCb7HXT_Zx0PRjimMugW8M`);
                 const data = await response.json();
 
                 if (data.cod === 200) {
