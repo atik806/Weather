@@ -273,7 +273,7 @@
             resultDiv.innerHTML = '';
 
             try {
-                const geoResponse = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=fea1d80287c19aff2cb2b59b1038b1c7`);
+                const geoResponse = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=Your api key`);
                 const geoData = await geoResponse.json();
 
                 if (geoData.length === 0) {
@@ -282,7 +282,7 @@
                 }
 
                 const { lat, lon } = geoData[0];
-                const response = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=fea1d80287c19aff2cb2b59b1038b1c7&units=metric`);
+                const response = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=Your api key here&units=metric`);
                 const data = await response.json();
 
                 if (data.cod === "200") {
